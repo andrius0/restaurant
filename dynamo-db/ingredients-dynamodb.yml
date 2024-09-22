@@ -1,0 +1,23 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create a low-cost DynamoDB table for storing ingredients
+
+Resources:
+  IngredientsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Ingredients
+      BillingMode: PAY_PER_REQUEST  # On-Demand mode for cost efficiency
+      AttributeDefinitions:
+        - AttributeName: IngredientId
+          AttributeType: S  # String type for IngredientId
+      KeySchema:
+        - AttributeName: IngredientId
+          KeyType: HASH  # Partition key
+      TimeToLiveSpecification:  # Enable TTL to automatically delete expired ingredients
+        AttributeName: ExpirationDate
+        Enabled: true
+
+Outputs:
+  IngredientsTableName:
+    Description: The name of the Ingredients DynamoDB table
+    Value: !Ref IngredientsTable
