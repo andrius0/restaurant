@@ -3,6 +3,15 @@ aws cloudformation create-stack --stack-name IngredientsStack --template-body fi
 ## run local docker:
 docker run -d -p 8000:8000 amazon/dynamodb-local
 
+# list
+aws dynamodb list-tables --endpoint-url http://localhost:8000
+
+# list
+aws dynamodb scan --table-name Ingredients --endpoint-url http://localhost:8000 --output json | jq
+
+# describe
+aws dynamodb describe-table --table-name ingredients --query "Table.KeySchema" --endpoint-url http://localhost:8000
+
 ## read all items:
 aws dynamodb scan --table-name Ingredients --endpoint-url http://localhost:8000
 

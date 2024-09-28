@@ -9,6 +9,11 @@ from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
 import boto3
 from boto3.dynamodb.conditions import Attr
+from botocore.exceptions import ClientError
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 openai_api_key = os.getenv("OPENAI_API_KEY")
@@ -24,9 +29,10 @@ class AgentState(TypedDict):
 
 
 prompt = ChatPromptTemplate.from_messages([
-    ("system", """You are an AI assistant for a restaurant. Interpret the user's food order, identifying the intent, ingredients, and type of food.
+    ("system", """You are an AI assistant for a restaurant. Interpret the user's food order, identifying the intent, ingredients, and type of food. 
+    After identifying food provide generic amounts of ingredients required in kilograms. 
     Respond in the following JSON format:
-    {{"intent": "order_food", "ingredients": ["ingredient1", "ingredient2"], "food_type": "type_of_food"}}
+    {{"intent": "order_food", "ingredients": ["ingredient1": "weight1", "ingredient2": "weight2"], "food_type": "type_of_food"}}
     After analyzing the order, decide which inventory to check:
     - If the order is for pizza or pasta, use the "current_restaurant" inventory.
     - For all other food types, use the "sister_restaurant" inventory.
@@ -38,16 +44,60 @@ prompt = ChatPromptTemplate.from_messages([
 model = ChatOpenAI(api_key=openai_api_key)
 
 if USE_DYNAMODB:
-    dynamodb = boto3.resource('dynamodb')
+    dynamodb = boto3.resource('dynamodb', endpoint_url='http://localhost:8000')
     table = dynamodb.Table('Ingredients')
 
 
-def check_inventory_dynamodb(ingredients: List[str]) -> Dict[str, bool]:
-    inventory_status = {}
+def check_ingredient_quantity_by_name(ingredient_name):
+    try:
+        # Create the filter expression
+        filter_expression = boto3.dynamodb.conditions.Attr('IngredientName').eq(ingredient_name)
+        logger.info(f"Filter expression: {filter_expression}")
+
+        # Perform the scan operation
+        logger.info(f"Scanning table for ingredient: {ingredient_name}")
+        response = table.scan(FilterExpression=filter_expression)
+
+        # Log the response
+        logger.info(f"Scan response: {response}")
+
+        # Check if any items were found
+        if response['Count'] == 0:
+            logger.warning(f"Ingredient '{ingredient_name}' not found.")
+            return None
+
+        # Get the first matching item (assuming ingredient names are unique)
+        item = response['Items'][0]
+        logger.info(f"Found item: {item}")
+
+        # Get the quantity
+        quantity = int(item.get('Quantity', 0))
+        logger.info(f"Quantity: {quantity}")
+
+        # Check if the quantity is greater than 0
+        if quantity > 0:
+            logger.info(f"Ingredient '{ingredient_name}' found. Quantity: {quantity}")
+            return quantity
+        else:
+            logger.warning(f"Ingredient '{ingredient_name}' found, but quantity is 0.")
+            return None
+
+    except ClientError as e:
+        logger.error(f"An error occurred: {e.response['Error']['Message']}")
+        return None
+    except Exception as e:
+        logger.error(f"An unexpected error occurred: {str(e)}")
+        return None
+
+def check_inventory_dynamodb(ingredients: List[str]) -> list[dict[str, str | None | int]]:
+    recipe_ingredients = []
     for ingredient in ingredients:
-        response = table.get_item(Key={'name': ingredient})
-        inventory_status[ingredient] = 'Item' in response and response['Item']['in_stock']
-    return inventory_status
+        quantity = check_ingredient_quantity_by_name(ingredient)
+        inventory_status = {}
+        inventory_status['ingredient'] = ingredient
+        inventory_status['quantity'] = quantity
+        recipe_ingredients.append(inventory_status)
+    return recipe_ingredients
 
 
 def check_inventory_static(ingredients: List[str]) -> Dict[str, bool]:
@@ -102,8 +152,10 @@ def agent(state: AgentState):
     result_message += f"Food type: {parsed_response['food_type']}\n"
     result_message += f"Inventory checked: {parsed_response.get('inventory_choice', 'current_restaurant')}\n"
     result_message += "Ingredients availability:\n"
-    for ingredient, available in inventory_status.items():
-        result_message += f"- {ingredient}: {'Available' if available else 'Not available'}\n"
+
+    for item in inventory_status:
+        amount_remaining = item['quantity']
+        result_message += f"- {item['ingredient']}: amount remaining: {amount_remaining}\n"
 
     return {
         "messages": messages + [AIMessage(content=result_message)],
