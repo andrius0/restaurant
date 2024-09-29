@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #f2f2f2;
+  background-image: url('/public/food-themed-background.png');
+  background-size: cover;
+  background-attachment: fixed;
+  margin: 0;
+  padding: 0;
+}
+
+.hero {
+  background-image: url('https://source.unsplash.com/1600x900/?food');
+  height: 250px;
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.hero h1 {
+  font-size: 42px;
+  font-weight: 700;
+  text-shadow: 2px 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.container {
+  max-width: 600px;
+  margin: 20px auto;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+h2 {
+  color: #333;
+  font-size: 32px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+textarea {
+  width: 100%;
+  padding: 15px;
+  font-size: 18px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  margin: 20px 0;
+  resize: none;
+  outline: none;
+  transition: border-color 0.3s ease;
+  display: block;
+  box-sizing: border-box;
+}
+
+textarea:focus {
+  border-color: #ff9800;
+}
+
+.delivery-options {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 18px;
+  color: #333;
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 25px;
+  width: 25px;
+  background-color: #eee;
+  border-radius: 5px;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background-color: #ff9800;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox-container .checkmark:after {
+  left: 9px;
+  top: 5px;
+  width: 5px;
+  height: 10px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+}
+
+.submit-btn {
+  width: 100%;
+  padding: 15px;
+  background-color: #4caf50;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+.submit-btn:hover {
+  background-color: #45a049;
+  transform: scale(1.02);
+}
+
+footer {
+  margin-top: 30px;
+  font-size: 14px;
+  color: #888;
+  background: rgba(255, 255, 255, 0.8);
+  padding: 10px 0;
+}
+
+header {
+  background-color: #ff9800;
+  color: white;
+  text-align: center;
+  padding: 20px 0;
+}
+
+@media (max-width: 768px) {
+  .container {
+    width: 90%;
+    margin: 20px auto;
+  }
+
+  .hero h1 {
+    font-size: 32px;
+  }
+
+  .checkbox-container {
+    font-size: 16px;
+  }
+}

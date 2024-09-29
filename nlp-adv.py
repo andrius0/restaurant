@@ -93,9 +93,7 @@ def check_inventory_dynamodb(ingredients: List[str]) -> list[dict[str, str | Non
     recipe_ingredients = []
     for ingredient in ingredients:
         quantity = check_ingredient_quantity_by_name(ingredient)
-        inventory_status = {}
-        inventory_status['ingredient'] = ingredient
-        inventory_status['quantity'] = quantity
+        inventory_status = {'ingredient': ingredient, 'quantity': quantity}
         recipe_ingredients.append(inventory_status)
     return recipe_ingredients
 
@@ -122,6 +120,7 @@ def check_inventory_sister_restaurant(ingredients: List[str]) -> Dict[str, bool]
 
 
 def check_inventory(ingredients: List[str], inventory_choice: str) -> Dict[str, bool]:
+    # LLM decides if it's current restaurant or if it's something else
     if inventory_choice == "current_restaurant":
         return check_inventory_dynamodb(ingredients) if USE_DYNAMODB else check_inventory_static(ingredients)
     elif inventory_choice == "sister_restaurant":
@@ -154,8 +153,9 @@ def agent(state: AgentState):
     result_message += "Ingredients availability:\n"
 
     for item in inventory_status:
+        ingredient = item["ingredient"]
         amount_remaining = item['quantity']
-        result_message += f"- {item['ingredient']}: amount remaining: {amount_remaining}\n"
+        result_message += f"- {ingredient}: amount remaining: {amount_remaining}\n"
 
     return {
         "messages": messages + [AIMessage(content=result_message)],
@@ -174,7 +174,7 @@ app = workflow.compile()
 
 # Example usage
 inputs = {
-    "messages": [HumanMessage(content="I'd like to order a pepperoni pizza with extra cheese and mushrooms.")],
+    "messages": [HumanMessage(content="I'd like to order chocolate chip cookies and milk.")],
     "order_intent": "",
     "ingredients": [],
     "food_type": ""
