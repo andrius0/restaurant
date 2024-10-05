@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Restaurant Order Processing Lambda Function with EventBridge
+
+Globals:
+  Function:
+    Timeout: 60
+    MemorySize: 256
+
+Resources:
+  RestaurantOrderFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: app.lambda_handler
+      Runtime: python3.11
+      Environment:
+        Variables:
+          OPENAI_API_KEY_PARAM_NAME: '/restaurant/openai_api_key'
+          USE_DYNAMODB: 'True'
+          DYNAMODB_TABLE_NAME: !Ref IngredientsTable
+          SISTER_RESTAURANT_API_URL: 'http://sister-restaurant-api.example.com/inventory'
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref IngredientsTable
+        - SSMParameterReadPolicy:
+            ParameterName: /restaurant/openai_api_key
+
+  RestaurantOrderRule:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: "EventBridge rule to trigger the Restaurant Order Processing Lambda"
+      EventPattern:
+        source:
+          - "com.restaurant.order"
+        detail-type:
+          - "NewOrder"
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt RestaurantOrderFunction.Arn
+          Id: "RestaurantOrderLambda"
+
+  PermissionForEventsToInvokeLambda:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RestaurantOrderFunction
+      Action: "lambda:InvokeFunction"
+      Principal: "events.amazonaws.com"
+      SourceArn: !GetAtt RestaurantOrderRule.Arn
+
+  IngredientsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Ingredients
+      AttributeDefinitions:
+        - AttributeName: IngredientName
+          AttributeType: S
+      KeySchema:
+        - AttributeName: IngredientName
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+Outputs:
+  RestaurantOrderFunction:
+    Description: "Restaurant Order Lambda Function ARN"
+    Value: !GetAtt RestaurantOrderFunction.Arn
+  RestaurantOrderRule:
+    Description: "EventBridge Rule ARN"
+    Value: !GetAtt RestaurantOrderRule.Arn

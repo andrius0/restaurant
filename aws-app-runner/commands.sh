@@ -29,3 +29,5 @@ aws apprunner pause-service --service-arn <service-arn>
 
 aws apprunner delete-service --service-arn <service-arn>
 
+# create passwords
+aws ssm put-parameter --name "/restaurant/openai_api_key" --type "SecureString" --value "<>" --description "OpenAI API Key for Restaurant Order Processing"
