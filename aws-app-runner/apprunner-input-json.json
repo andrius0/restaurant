@@ -1,0 +1,27 @@
+{
+  "ServiceName": "my-apprunner-service",
+  "SourceConfiguration": {
+    "AuthenticationConfiguration": {
+      "AccessRoleArn": "arn:aws:iam::{account}:role/AppRunnerAccessRole"
+    },
+    "ImageRepository": {
+      "ImageIdentifier": "{account}.dkr.ecr.us-east-1.amazonaws.com/react-food-order-app:latest",
+      "ImageRepositoryType": "ECR",
+      "ImageConfiguration": {
+        "Port": "80"
+      }
+    }
+  },
+  "HealthCheckConfiguration": {
+      "Path": "/",
+      "Protocol": "HTTP",
+      "Interval": 10,
+      "Timeout": 5,
+      "HealthyThreshold": 3,
+      "UnhealthyThreshold": 3
+    },
+  "InstanceConfiguration": {
+    "Cpu": "1024",
+    "Memory": "2048"
+  }
+}
