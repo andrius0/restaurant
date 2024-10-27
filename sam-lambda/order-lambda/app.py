@@ -335,28 +335,8 @@ def check_inventory_dynamodb(ingredients: List[str]) -> list[dict[str, str | Non
         recipe_ingredients.append(inventory_status)
     return recipe_ingredients
 
-
-def check_inventory_static(ingredients: List[str]) -> Dict[str, bool]:
-    static_inventory = {
-        "pepperoni": True, "cheese": True, "dough": True,
-        "tomato sauce": True, "mushrooms": False, "olives": True
-    }
-    return {ingredient: static_inventory.get(ingredient.lower(), False) for ingredient in ingredients}
-
-
 def check_inventory_sister_restaurant(ingredients):
     return False
-
-
-# def check_inventory(ingredients: List[str], inventory_choice: str) -> Dict[str, bool]:
-#     if inventory_choice == "current_restaurant":
-#         return check_inventory_dynamodb(ingredients) if USE_DYNAMODB else check_inventory_static(ingredients)
-#     elif inventory_choice == "sister_restaurant":
-#         return check_inventory_sister_restaurant(ingredients)
-#     else:
-#         logger.error(f"Invalid inventory choice: {inventory_choice}")
-#         return {ingredient: False for ingredient in ingredients}
-
 
 # Example initial state
 def create_initial_state(customer_message: str) -> PizzaOrderState:
@@ -401,23 +381,6 @@ prompt = ChatPromptTemplate.from_messages([
 
 model = ChatOpenAI(api_key=openai_api_key)
 
-# Mock inventory data (in a real system, this would be a database)
-current_restaurant_inventory = {
-    "flour": 100.0,
-    "tomato_sauce": 50.0,
-    "cheese": 75.0,
-    "pepperoni": 30.0,
-    "mushrooms": 20.0
-}
-
-sister_restaurant_inventory = {
-    "rice": 100.0,
-    "chicken": 50.0,
-    "vegetables": 75.0,
-    "soy_sauce": 30.0,
-    "noodles": 20.0
-}
-
 # Build the graph
 builder = StateGraph(PizzaOrderState)
 
@@ -458,28 +421,52 @@ img = graph.get_graph().draw_mermaid_png()
 with open("restaurant_order_flow.png", "wb") as f:
     f.write(img)
 
-# Example usage
-if __name__ == "__main__":
-    # Example customer order
-    customer_message = "I'd like to order a large cheese pizza for delivery"
 
-    # Create initial state with customer message
-    initial_state = create_initial_state(customer_message)
-    initial_state["customer_name"] = "John Doe"
-    initial_state["delivery_address"] = "123 Main St"
-    initial_state["phone_number"] = "555-0123"
+def lambda_handler(event, context):
+    try:
+        # Parse the incoming event
+        body = json.loads(event['body']) if isinstance(event.get('body'), str) else event.get('body', {})
 
-    # Run the graph
-    final_state = graph.invoke(initial_state)
+        # Create initial state
+        initial_state = create_initial_state(body)
 
-    # Print order summary
-    print(f"Order ID: {final_state['order_id']}")
-    print(f"Status: {final_state['order_status']}")
-    print(f"Total Price: ${final_state['total_price']:.2f}")
-    print("\nOrder Notes:")
-    for note in final_state['notes']:
-        print(f"- {note}")
-    if final_state['errors']:
-        print("\nErrors:")
-        for error in final_state['errors']:
-            print(f"- {error}")
+        # Process the order through the graph
+        final_state = graph.invoke(initial_state)
+
+        # Prepare the response
+        response = {
+            "order_id": final_state['order_id'],
+            "status": final_state['order_status'],
+            "total_price": final_state['total_price'],
+            "notes": final_state['notes'],
+            "errors": final_state['errors']
+        }
+
+        # Add delivery/pickup specific information
+        if final_state['order_type'] == 'pickup':
+            response['estimated_pickup_time'] = final_state['estimated_pickup_time'].isoformat() if final_state[
+                'estimated_pickup_time'] else None
+        else:
+            response['estimated_delivery_time'] = final_state['estimated_delivery_time'].isoformat() if final_state[
+                'estimated_delivery_time'] else None
+
+        return {
+            "statusCode": 200,
+            "body": json.dumps(response),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
+
+    except Exception as e:
+        logger.error(f"Error processing order: {str(e)}")
+        return {
+            "statusCode": 500,
+            "body": json.dumps({
+                "error": "Internal server error",
+                "message": str(e)
+            }),
+            "headers": {
+                "Content-Type": "application/json"
+            }
+        }
