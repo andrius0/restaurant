@@ -172,6 +172,10 @@ workflow.add_edge("agent", END)
 
 app = workflow.compile()
 
+ipython_image = Image(app.get_graph().draw_mermaid_png())
+with open("saved_image.jpg", "wb") as f:
+    f.write(ipython_image.data)
+
 # Example usage
 inputs = {
     "messages": [HumanMessage(content="I'd like to order chocolate chip cookies and milk.")],
