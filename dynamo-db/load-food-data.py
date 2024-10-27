@@ -53,8 +53,13 @@ common_food_items = [
     {"IngredientId": "17", "IngredientName": "pasta", "Quantity": 80, "UnitOfMeasurement": "kg", "ExpirationDate": "2025-01-20"},
     {"IngredientId": "18", "IngredientName": "orange", "Quantity": 50, "UnitOfMeasurement": "kg", "ExpirationDate": "2024-11-15"},
     {"IngredientId": "19", "IngredientName": "banana", "Quantity": 70, "UnitOfMeasurement": "kg", "ExpirationDate": "2024-10-10"},
-    {"IngredientId": "20", "IngredientName": "strawberry", "Quantity": 25, "UnitOfMeasurement": "kg", "ExpirationDate": "2024-09-25"}
+    {"IngredientId": "20", "IngredientName": "strawberry", "Quantity": 25, "UnitOfMeasurement": "kg", "ExpirationDate": "2024-09-25"},
+    {"IngredientId": "21", "IngredientName": "dough", "Quantity": 25, "UnitOfMeasurement": "kg","ExpirationDate": "2024-09-25"},
+    {"IngredientId": "22", "IngredientName": "tomato sauce", "Quantity": 25, "UnitOfMeasurement": "kg","ExpirationDate": "2024-09-25"},
+
 ]
+
+# {'cheese': '0.3kg', 'dough': '0.5kg', 'tomato sauce': '0.2kg'}
 
 # Reference the DynamoDB table
 table = dynamodb.Table(table_name)
