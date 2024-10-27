@@ -42,7 +42,7 @@ data "archive_file" "lambda_zip" {
   source_dir  = "${path.module}/lambda"
 }
 
-# CloudWatch Log Group
+# CloudWatch Log Group for Lambda
 resource "aws_cloudwatch_log_group" "lambda_logs" {
   name              = "/aws/lambda/restaurant-order-processor"
   retention_in_days = 14
@@ -96,10 +96,10 @@ resource "aws_iam_role" "lambda_role" {
   })
 }
 
-# IAM Policy for Lambda
-resource "aws_iam_role_policy" "lambda_policy" {
-  name = "restaurant_order_lambda_policy"
-  role = aws_iam_role.lambda_role.id
+# Create IAM policy
+resource "aws_iam_policy" "lambda_policy" {
+  name        = "restaurant_order_lambda_policy"
+  description = "IAM policy for restaurant order lambda"
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -134,6 +134,12 @@ resource "aws_iam_role_policy" "lambda_policy" {
       }
     ]
   })
+}
+
+# Attach policy to role
+resource "aws_iam_role_policy_attachment" "lambda_policy" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.lambda_policy.arn
 }
 
 # API Gateway
@@ -182,12 +188,14 @@ resource "aws_apigatewayv2_route" "restaurant_order" {
   target    = "integrations/${aws_apigatewayv2_integration.restaurant_order.id}"
 }
 
+# CloudWatch Log Group for API Gateway
 resource "aws_cloudwatch_log_group" "api_gw" {
   name = "/aws/api_gw/${aws_apigatewayv2_api.lambda.name}"
 
   retention_in_days = 14
 }
 
+# Lambda permission for API Gateway
 resource "aws_lambda_permission" "api_gw" {
   statement_id  = "AllowExecutionFromAPIGateway"
   action        = "lambda:InvokeFunction"
