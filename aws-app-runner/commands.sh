@@ -18,7 +18,7 @@ aws apprunner create-service \
 --service-name $SERVICE_NAME \
 --source-configuration ImageRepository={"ImageIdentifier=$REPOSITORY_URI:$IMAGE_TAG","ImageRepositoryType=ECR"} \
 --instance-configuration Cpu="1024",Memory="2048" \
---region $REGION
+--region "us-east-1"
 
 # check status
 aws apprunner describe-service --service-arn arn:aws:apprunner:$REGION:<your-aws-account-id>:service/$SERVICE_NAME/<service-id>

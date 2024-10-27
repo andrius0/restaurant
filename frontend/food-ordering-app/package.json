@@ -1,7 +1,7 @@
 {
   "name": "food-ordering-app",
   "version": "1.0.0",
-  "description": "A React app for a food ordering service",
+  "description": "A React app for a food ordering service with health check endpoint",
   "main": "src/index.js",
   "scripts": {
     "start": "react-scripts start",
@@ -10,8 +10,9 @@
     "eject": "react-scripts eject"
   },
   "dependencies": {
-    "react": "^18.0.0",
-    "react-dom": "^18.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0",
     "react-scripts": "5.0.1"
   },
   "eslintConfig": {
